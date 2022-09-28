@@ -77,6 +77,22 @@ def merge_dfs(files, filetype):
                     try:
                         full_df = pd.read_excel(path, sheet_name='Data', header=1, index_col=False)
                         # ^ Set second row as headings ^
+
+                        for i in full_df.columns:  # Removes unwanted headers
+                            if "Unnamed" in str(i):
+                                full_df.drop(i, axis=1, inplace=True)
+
+                        headers = pd.read_excel(path, sheet_name='Data', index_col=0, nrows=0).columns.tolist()
+                        filtered_headers = [headers[4], headers[6]]
+                        print(filtered_headers)
+                        # ^ Valuable info under headers we missed in full_df as per request.
+
+                        for i, col in enumerate(["Filename:", "Procedure:"]):
+
+                            # Insert new column at end of columns with heading from list above.
+                            # Only insert 1 value.
+                            full_df.insert(len(full_df.columns), col, [filtered_headers[i]]+['']*(len(full_df.index)-1))
+
                         dfs.append(full_df)
                     except ValueError:
                         logging.error("'Data' sheet does not exist! No job completed.\n")
@@ -127,6 +143,7 @@ def output_handler(output_df, out_format):
     :param out_format: Desired file format for output (xlsx, csv)
     :return: None
     """
+
     if str(out_format) not in globals()['ALL_EXTENSIONS']:
         raise TypeError("Illegal configuration file! Must be CSV/XLSX! Current value: " + str(out_format))
     if out_format == 'xlsx':
